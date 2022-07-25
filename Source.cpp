@@ -1,6 +1,9 @@
 ﻿#pragma comment(linker,"\"/manifestdependency:type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")
 
 #include <windows.h>
+#include <string>
+#include "string_calculator.h"
+#include "calculator.h"
 
 TCHAR szClassName[] = TEXT("Calculator");
 
@@ -12,10 +15,7 @@ LRESULT CALLBACK EditProc1(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	{
 	case WM_CHAR:
 		if (wParam == 0x0D) {
-			HWND hParent = GetParent(hWnd);
-			if (hParent) {
-				PostMessage(hParent, WM_COMMAND, IDOK, 0);
-			}
+			PostMessage(GetParent(hWnd), WM_COMMAND, IDOK, 0);
 			return 0;
 		}
 		break;
@@ -53,13 +53,34 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		{
 			DWORD dwTextLength = GetWindowTextLength(hInputEdit);
 			LPWSTR lpszText = (LPWSTR)GlobalAlloc(0, sizeof(WCHAR) * (dwTextLength + 1));
-			(void)GetWindowText(hInputEdit, lpszText, dwTextLength + 1);
-			dwTextLength = (DWORD)SendMessage(hOutputEdit, WM_GETTEXTLENGTH, 0, 0);
-			SendMessage(hOutputEdit, EM_SETSEL, (WPARAM)dwTextLength, (LPARAM)dwTextLength);
-			SendMessage(hOutputEdit, EM_REPLACESEL, 0, (LPARAM)lpszText);
-			SendMessage(hOutputEdit, EM_REPLACESEL, 0, (LPARAM)L"\r\n");
-			GlobalFree(lpszText);
-			SetWindowText(hInputEdit, 0);
+			if (lpszText) {
+				GetWindowText(hInputEdit, lpszText, dwTextLength + 1);
+				std::wstring fullExpression(lpszText);
+				std::wstring answer;
+				dwTextLength = (DWORD)SendMessage(hOutputEdit, WM_GETTEXTLENGTH, 0, 0);
+				SendMessage(hOutputEdit, EM_SETSEL, (WPARAM)dwTextLength, (LPARAM)dwTextLength);
+				SendMessage(hOutputEdit, EM_REPLACESEL, 0, (LPARAM)lpszText);
+				GlobalFree(lpszText);
+				if (!validate(fullExpression)) {
+					SendMessage(hOutputEdit, EM_REPLACESEL, 0, (LPARAM)L"(入力された式が正しくありません。)");
+					SendMessage(hOutputEdit, EM_REPLACESEL, 0, (LPARAM)L"\r\n");
+					return 0;
+				}
+				fullExpression = postfix(fullExpression);
+				try {
+					answer = calculate(fullExpression);
+				} catch (const std::exception& error) {
+					SendMessage(hOutputEdit, EM_REPLACESEL, 0, (LPARAM)L"(");
+					SendMessageA(hOutputEdit, EM_REPLACESEL, 0, (LPARAM)error.what());
+					SendMessage(hOutputEdit, EM_REPLACESEL, 0, (LPARAM)L")\r\n");
+					return 0;
+				}
+				SendMessage(hOutputEdit, EM_REPLACESEL, 0, (LPARAM)L"=");
+				SendMessage(hOutputEdit, EM_REPLACESEL, 0, (LPARAM)answer.c_str());
+				SendMessage(hOutputEdit, EM_REPLACESEL, 0, (LPARAM)L"\r\n");
+				SetWindowText(hInputEdit, 0);
+			}
+			return 0;
 		}
 		break;
 	case WM_DESTROY:
