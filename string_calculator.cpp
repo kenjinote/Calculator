@@ -63,8 +63,8 @@ wstring add(wstring lhs, wstring rhs) {
 	bool negFound = false;
 	
 	// Iteration variables
-	int leftIterate = lhs.length()-1;
-	int rightIterate = rhs.length()-1;
+	int leftIterate = (int)lhs.length() - 1;
+	int rightIterate = (int)rhs.length() - 1;
 
 	// Dealing with negatives
 
@@ -141,7 +141,7 @@ wstring add(wstring lhs, wstring rhs) {
 		rightIterate -= 1;
 	}
     wstring finalResult = L"";
-	int i = result.length() - 1; // result wstring is currently backwards due to push_back, this will mirror it
+	int i = (int)result.length() - 1; // result wstring is currently backwards due to push_back, this will mirror it
 	while (i >= 0)
 	{
 		finalResult += result.at(i);
@@ -170,8 +170,8 @@ wstring subtract(wstring lhs, wstring rhs) {
 	bool negFound = false;
 	
 	// Iteration variables
-	int leftIterate = lhs.length()-1;
-	int rightIterate = rhs.length()-1;
+	int leftIterate = (int)lhs.length() - 1;
+	int rightIterate = (int)rhs.length() - 1;
 
 	// Dealing with negatives
 
@@ -251,7 +251,7 @@ wstring subtract(wstring lhs, wstring rhs) {
 		rightIterate -= 1;
 	}
     wstring finalResult = L"";
-	int i = result.length() - 1;
+	int i = (int)result.length() - 1;
 	while (i >= 0) // reverses the appending
 	{
 		finalResult += result.at(i);
@@ -294,9 +294,9 @@ wstring multiply(wstring lhs, wstring rhs) {
 	}
     wstring sum = L"0";
 	int counter = 1;
-	for (int i = lhs.length() - 1; i >= 0; i--)  // nested for loop, one for the bigger number (top number) and one for the smaller number (bottom)
+	for (int i = (int)lhs.length() - 1; i >= 0; i--)  // nested for loop, one for the bigger number (top number) and one for the smaller number (bottom)
 	{
-		for (int j = rhs.length() - 1; j >= 0; j--)
+		for (int j = (int)rhs.length() - 1; j >= 0; j--)
 		{
 			topSide = digit_to_decimal(rhs.at(j));
 			bottomSide = digit_to_decimal(lhs.at(i));
@@ -327,7 +327,7 @@ wstring multiply(wstring lhs, wstring rhs) {
 				result += decimal_to_digit(product);  // no carry over, simply append it
 			}
 		}
-		int j = result.length()-1;  // reverses the result since it's currently backwards
+		int j = (int)result.length() - 1;  // reverses the result since it's currently backwards
 		wstring newResult = L"";
 		while (j >= 0)
 		{
@@ -440,18 +440,15 @@ wstring modulus(wstring dividend, wstring divisor) {
 wstring power(wstring lhs, wstring rhs) {
 	if (rhs == L"0")
 		return L"1";
-	if (rhs.find(L"-") != wstring::npos) {
+	if (rhs.find(L"-") != wstring::npos)
 		throw std::invalid_argument("Error: does not support negative powers.");
-	}
 	if (lhs == L"1")
 		return L"1";
-	wstring result = L"1";
+	wstring result = lhs;
 	for (;;) {
 		result = multiply(result, lhs);
 		rhs = subtract(rhs, L"1");
-		if (rhs == L"0") {
-			break;
-		}
+		if (rhs == L"1") break;
 	}
 	return result;
 }
